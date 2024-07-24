@@ -11,8 +11,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import static com.codeborne.selenide.Condition.*;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.open;
+import static com.codeborne.selenide.Selenide.*;
 
 public class CardDeliveryTest {
 
@@ -317,5 +316,118 @@ public class CardDeliveryTest {
 
         // Проверка добавления нового класса в элемент с "Cоглашением"
         agreementCheckbox.shouldHave(cssClass("input_invalid"));
+    }
+
+    @Test
+    void shouldSubmitWithCityAutocomplete() {
+        String cityStart = "Са"; // первые две буквы города
+        String cityFull = "Санкт-Петербург"; // полный город для выбора
+        SelenideElement cityDropdown = $(".menu-item__control"); // элемент выпадающего списка городов
+
+        // Заполнение поля "Город" и выбор города из автодополнения
+        cityField.setValue(cityStart);
+        cityDropdown.shouldBe(visible);
+        $$(".menu-item__control").findBy(text(cityFull)).click();
+
+        // Очистка от значения по умолчанию и заполнение поля "Дата"
+        dateField.sendKeys(Keys.chord(Keys.CONTROL, "a"), Keys.BACK_SPACE);
+        dateField.setValue(validDate);
+
+        // Заполнение поля "Фамилия и имя"
+        nameField.setValue(validName);
+
+        // Заполнение поля "Номер телефона"
+        phoneField.setValue(validPhone);
+
+        // Клик на чекбокс с "Согласием" и проверка поля
+        agreementCheckbox.$(".checkbox__box").click();
+        agreementCheckbox.$(".checkbox__control").shouldBe(selected);
+
+        // Клик на кнопку "Забронировать"
+        submitButton.click();
+
+        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        loadingIndicator.should(appear);
+
+        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
+        successNotification.shouldBe(visible);
+    }
+
+    @Test
+    void shouldSubmitWithCityAutocompleteFromSubstring() {
+        String citySubstring = "ом"; // Буквы в середине названия города
+        String cityFull = "Томск"; // полный город для выбора
+        SelenideElement cityDropdown = $(".menu-item__control"); // элемент выпадающего списка городов
+
+        // Заполнение поля "Город" и выбор города из автодополнения
+        cityField.setValue(citySubstring);
+        cityDropdown.shouldBe(visible);
+        $$(".menu-item__control").findBy(text(cityFull)).click();
+
+        // Очистка от значения по умолчанию и заполнение поля "Дата"
+        dateField.sendKeys(Keys.chord(Keys.CONTROL, "a"), Keys.BACK_SPACE);
+        dateField.setValue(validDate);
+
+        // Заполнение поля "Фамилия и имя"
+        nameField.setValue(validName);
+
+        // Заполнение поля "Номер телефона"
+        phoneField.setValue(validPhone);
+
+        // Клик на чекбокс с "Согласием" и проверка поля
+        agreementCheckbox.$(".checkbox__box").click();
+        agreementCheckbox.$(".checkbox__control").shouldBe(selected);
+
+        // Клик на кнопку "Забронировать"
+        submitButton.click();
+
+        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        loadingIndicator.should(appear);
+
+        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
+        successNotification.shouldBe(visible);
+    }
+
+    @Test
+    void shouldSubmitWithCalendarPopupWeekAhead() {
+
+        // Заполнение поля "Город"
+        cityField.setValue(validCity);
+
+        // Открытие календаря и выбор даты на неделю вперед
+        dateField.click(); // открывает высплывающий календарь
+        LocalDate targetDate = LocalDate.now().plusWeeks(1); // +1 неделя от сегодняшней даты
+
+        // Текущий и целевой месяцы
+        int currentMonth = LocalDate.now().getMonthValue();
+        int targetMonth = targetDate.getMonthValue();
+
+        // Если целевой месяц отличается от текущего, переключаем календарь на следующий месяц
+        if (currentMonth != targetMonth) {
+            $(".calendar__arrow_direction_right[data-step='1']").click(); // переключение на следующий месяц
+        }
+
+        // Выбор дня в календаре
+        String day = targetDate.format(DateTimeFormatter.ofPattern("d"));
+        $$(".calendar__day").findBy(text(day)).click();
+
+        // Заполнение поля "Фамилия и имя"
+        nameField.setValue(validName);
+
+        // Заполнение поля "Номер телефона"
+        phoneField.setValue(validPhone);
+
+        // Клик на чекбокс с "Согласием" и проверка поля
+        agreementCheckbox.$(".checkbox__box").click();
+        agreementCheckbox.$(".checkbox__control").shouldBe(selected);
+
+        // Клик на кнопку "Забронировать"
+        submitButton.click();
+
+        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        loadingIndicator.should(appear);
+
+        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
+        successNotification.shouldBe(visible);
     }
 }
