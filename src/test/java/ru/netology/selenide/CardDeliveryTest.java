@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import org.openqa.selenium.Keys;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -15,21 +16,25 @@ import static com.codeborne.selenide.Selenide.*;
 
 public class CardDeliveryTest {
 
+    public String generateDate(int days, String pattern) {
+        return LocalDate.now().plusDays(days).format(DateTimeFormatter.ofPattern(pattern));
+    }
+
     // Объекты тестовых элементов с css-селекторами
     SelenideElement cityField = $("[data-test-id='city'] input");
     SelenideElement dateField = $("[data-test-id='date'] input");
     SelenideElement nameField = $("[data-test-id='name'] input");
     SelenideElement phoneField = $("[data-test-id='phone'] input");
     SelenideElement agreementCheckbox = $("[data-test-id='agreement']");
-    SelenideElement submitButton = $(".button.button_view_extra.button_size_m.button_theme_alfa-on-white");
+    SelenideElement submitButton = $(".button");
     SelenideElement loadingIndicator = $(".button__icon");
     SelenideElement successNotification = $(".notification__content");
 
     // Тестовые данные
     String validCity = "Санкт-Петербург";
     String invalidCity = "Гатчина";
-    String validDate = LocalDate.now().plusDays(3).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-    String invalidDate = LocalDate.now().plusDays(2).format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+    String validDate = generateDate(3, "dd.MM.yyyy");
+    String invalidDate = generateDate(2, "dd.MM.yyyy");
     String validName = "а а";
     String invalidName = "f f";
     String validPhone = "+79200000000";
@@ -37,7 +42,6 @@ public class CardDeliveryTest {
 
     @BeforeEach
     void setUp() {
-        Configuration.timeout = 15000; // 15 секунд на ожидание
         open("http://localhost:9999");
     }
 
@@ -65,10 +69,11 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка состояния кнопки загрузки
-        loadingIndicator.shouldBe(visible);
+        loadingIndicator.should(appear);
 
-        // Проверка всплывающего окна об успешном завершении бронирования
-        successNotification.should(appear);
+        // Проверка всплывающего окна об успешном завершении бронирования, содержашего дату
+        successNotification.shouldBe(visible, Duration.ofSeconds(15));
+        successNotification.shouldHave(text(validDate));
     }
 
     @Test
@@ -95,8 +100,8 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка ошибки для поля "Город"
-        cityField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        cityField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Доставка в выбранный город недоступна"));
+        $("[data-test-id='city']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='city'] .input__sub").shouldBe(visible).shouldHave(text(("Доставка в выбранный город недоступна")));
     }
 
     @Test
@@ -123,8 +128,8 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка ошибки для поля "Город"
-        cityField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        cityField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Поле обязательно для заполнения"));
+        $("[data-test-id='city']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='city'] .input__sub").shouldBe(visible).shouldHave(text(("Поле обязательно для заполнения")));
     }
 
     @Test
@@ -150,7 +155,7 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
+        // Проверка ошибки для поля "Дата"
         dateField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
         dateField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Заказ на выбранную дату невозможен"));
     }
@@ -178,7 +183,7 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
+        // Проверка ошибки для поля "Дата"
         dateField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
         dateField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Неверно введена дата"));
     }
@@ -206,9 +211,9 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
-        nameField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        nameField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
+        // Проверка ошибки для поля "Фамилия и имя"
+        $("[data-test-id='name']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='name'] .input__sub").shouldBe(visible).shouldHave(text(("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")));
     }
 
     @Test
@@ -234,9 +239,9 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
-        nameField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        nameField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Поле обязательно для заполнения"));
+        // Проверка ошибки для поля "Фамилия и имя"
+        $("[data-test-id='name']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='name'] .input__sub").shouldBe(visible).shouldHave(text(("Поле обязательно для заполнения")));
     }
 
     @Test
@@ -262,9 +267,9 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
-        phoneField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        phoneField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
+        // Проверка ошибки для поля "Номер телефона"
+        $("[data-test-id='phone']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='phone'] .input__sub").shouldBe(visible).shouldHave(text(("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.")));
     }
 
     @Test
@@ -290,9 +295,9 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // Проверка ошибки для поля "Город"
-        phoneField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        phoneField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Поле обязательно для заполнения"));
+        // Проверка ошибки для поля "Номер телефона"
+        $("[data-test-id='phone']").shouldHave(cssClass("input_invalid"));
+        $("[data-test-id='phone'] .input__sub").shouldBe(visible).shouldHave(text(("Поле обязательно для заполнения")));
     }
 
     @Test
@@ -315,7 +320,7 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка добавления нового класса в элемент с "Cоглашением"
-        agreementCheckbox.shouldHave(cssClass("input_invalid"));
+        agreementCheckbox.shouldHave(cssClass("input_invalid")).shouldBe(visible);
     }
 
     @Test
@@ -346,11 +351,12 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        // Проверка состояния кнопки загрузки
         loadingIndicator.should(appear);
 
-        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
-        successNotification.shouldBe(visible);
+        // Проверка всплывающего окна об успешном завершении бронирования, содержашего дату
+        successNotification.shouldBe(visible, Duration.ofSeconds(15));
+        successNotification.shouldHave(text(validDate));
     }
 
     @Test
@@ -381,11 +387,12 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        // Проверка состояния кнопки загрузки
         loadingIndicator.should(appear);
 
-        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
-        successNotification.shouldBe(visible);
+        // Проверка всплывающего окна об успешном завершении бронирования, содержашего дату
+        successNotification.shouldBe(visible, Duration.ofSeconds(15));
+        successNotification.shouldHave(text(validDate));
     }
 
     @Test
@@ -424,10 +431,11 @@ public class CardDeliveryTest {
         // Клик на кнопку "Забронировать"
         submitButton.click();
 
-        // проверяем, что форма перешла в состояние загрузки (например, наличие определенного элемента)
+        // Проверка состояния кнопки загрузки
         loadingIndicator.should(appear);
 
-        // проверяем, что появилось всплывающее окно об успешном завершении бронирования
-        successNotification.shouldBe(visible);
+        // Проверка всплывающего окна об успешном завершении бронирования, содержашего дату
+        successNotification.shouldBe(visible, Duration.ofSeconds(15));
+        successNotification.shouldHave(text(targetDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))));
     }
 }
