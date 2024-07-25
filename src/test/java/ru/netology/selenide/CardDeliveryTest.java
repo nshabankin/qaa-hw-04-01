@@ -156,8 +156,7 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка ошибки для поля "Дата"
-        dateField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        dateField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Заказ на выбранную дату невозможен"));
+        $("[data-test-id='date'] .input_invalid .input__sub").shouldBe(visible).shouldHave(text(("Заказ на выбранную дату невозможен")));
     }
 
     @Test
@@ -184,8 +183,7 @@ public class CardDeliveryTest {
         submitButton.click();
 
         // Проверка ошибки для поля "Дата"
-        dateField.parent().parent().$(".input_invalid .input__sub").shouldBe(visible);
-        dateField.parent().parent().$(".input_invalid .input__sub").shouldHave(text("Неверно введена дата"));
+        $("[data-test-id='date'] .input_invalid .input__sub").shouldBe(visible).shouldHave(text(("Неверно введена дата")));
     }
 
     @Test
